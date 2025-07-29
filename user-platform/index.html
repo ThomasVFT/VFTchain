@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VFT User Platform - Decentralized AI Computing</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #2563EB 0%, #7C3AED 50%, #2563EB 100%); }
+        .glass { background: rgba(255,255,255,0.1); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.2); }
+        .glass-dark { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(71, 85, 105, 0.2); }
+        .card-hover:hover { transform: translateY(-2px); transition: all 0.3s ease; }
+        .btn-primary { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
+        .btn-primary:hover { background: linear-gradient(135deg, #1D4ED8, #1E40AF); }
+        .status-badge { animation: pulse 2s infinite; }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+    <!-- Navigation -->
+    <nav class="glass fixed w-full top-0 z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-brain text-3xl text-blue-400"></i>
+                <span class="text-2xl font-bold">VFT Platform</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="hidden md:flex items-center space-x-2">
+                    <span class="text-sm">Wallet:</span>
+                    <span class="text-blue-400 font-mono text-sm" id="walletDisplay">Not Connected</span>
+                </div>
+                <button class="btn-primary px-4 py-2 rounded-lg" onclick="connectWallet()" id="walletBtn">
+                    <i class="fas fa-wallet mr-2"></i>Connect Wallet
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="pt-20 px-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold mb-4">AI Computation Platform</h1>
+                <p class="text-gray-300 text-lg">Submit AI jobs to the world's most powerful decentralized GPU network</p>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="glass rounded-xl p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <i class="fas fa-network-wired text-3xl text-blue-400"></i>
+                        <span class="text-2xl font-bold" id="activeMiners">4</span>
+                    </div>
+                    <h3 class="text-gray-300 text-sm">Active Miners</h3>
+                </div>
+                <div class="glass rounded-xl p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <i class="fas fa-tasks text-3xl text-green-400"></i>
+                        <span class="text-2xl font-bold" id="totalJobs">1</span>
+                    </div>
+                    <h3 class="text-gray-300 text-sm">Total Jobs</h3>
+                </div>
+                <div class="glass rounded-xl p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <i class="fas fa-clock text-3xl text-yellow-400"></i>
+                        <span class="text-2xl font-bold" id="avgTime">~45min</span>
+                    </div>
+                    <h3 class="text-gray-300 text-sm">Avg. Completion</h3>
+                </div>
+                <div class="glass rounded-xl p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <i class="fas fa-dollar-sign text-3xl text-purple-400"></i>
+                        <span class="text-2xl font-bold">70%</span>
+                    </div>
+                    <h3 class="text-gray-300 text-sm">Cost Savings</h3>
+                </div>
+            </div>
+
+            <!-- Main Dashboard Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Job Submission -->
+                <div class="lg:col-span-2">
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <h2 class="text-2xl font-bold mb-6 flex items-center">
+                            <i class="fas fa-plus-circle mr-3 text-green-400"></i>
+                            Submit New AI Job
+                        </h2>
+                        
+                        <form id="jobForm" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Job Title</label>
+                                    <input type="text" id="jobTitle" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="e.g., Image Classification Model" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Compute Type</label>
+                                    <select id="computeType" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none" required>
+                                        <option value="">Select compute type</option>
+                                        <option value="gpu">GPU Training</option>
+                                        <option value="cpu">CPU Processing</option>
+                                        <option value="storage">Data Processing</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Job Description</label>
+                                <textarea id="jobDescription" rows="3" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="Describe your AI computation task..." required></textarea>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Budget (VFT Tokens)</label>
+                                    <input type="number" id="jobBudget" min="100" max="10000" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none" placeholder="1000" required>
+                                    <p class="text-xs text-gray-400 mt-1">Minimum: 100 VFT (~$10)</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Priority</label>
+                                    <select id="jobPriority" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none">
+                                        <option value="1">Standard (Normal Queue)</option>
+                                        <option value="2">High (+25% cost)</option>
+                                        <option value="3">Urgent (+50% cost)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <div class="text-sm">
+                                    <span class="text-gray-400">Estimated completion: </span>
+                                    <span class="text-green-400 font-semibold" id="estimatedTime">30-60 minutes</span>
+                                </div>
+                                <button type="submit" class="btn-primary px-8 py-3 rounded-lg font-semibold" id="submitJobBtn">
+                                    <i class="fas fa-rocket mr-2"></i>Submit Job
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- My Jobs -->
+                    <div class="glass rounded-xl p-6">
+                        <h2 class="text-2xl font-bold mb-6 flex items-center">
+                            <i class="fas fa-list mr-3 text-blue-400"></i>
+                            My Jobs
+                        </h2>
+                        
+                        <div id="jobsList" class="space-y-4">
+                            <!-- Jobs will be populated by JavaScript -->
+                        </div>
+                        
+                        <div id="noJobs" class="text-center py-8">
+                            <i class="fas fa-inbox text-4xl text-gray-500 mb-4"></i>
+                            <h3 class="text-lg font-semibold mb-2">No Jobs Yet</h3>
+                            <p class="text-gray-400">Submit your first AI computation job to get started</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div>
+                    <!-- Account Info -->
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <h2 class="text-xl font-bold mb-4 flex items-center">
+                            <i class="fas fa-user-circle mr-3 text-purple-400"></i>
+                            Account Info
+                        </h2>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">VFT Balance:</span>
+                                <span class="text-yellow-400 font-semibold" id="vftBalance">0.00 VFT</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Jobs Completed:</span>
+                                <span id="completedJobs">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Total Spent:</span>
+                                <span id="totalSpent">0 VFT</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Member Since:</span>
+                                <span id="memberSince">Today</span>
+                            </div>
+                        </div>
+                        
+                        <button class="w-full mt-4 bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg" onclick="showTopUp()">
+                            <i class="fas fa-plus mr-2"></i>Buy VFT Tokens
+                        </button>
+                    </div>
+
+                    <!-- Network Status -->
+                    <div class="glass rounded-xl p-6 mb-6">
+                        <h2 class="text-xl font-bold mb-4 flex items-center">
+                            <i class="fas fa-signal mr-3 text-green-400"></i>
+                            Network Status
+                        </h2>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400">Platform Status:</span>
+                                <span class="flex items-center">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full mr-2 status-badge"></div>
+                                    <span class="text-green-400">Online</span>
+                                </span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Queue Position:</span>
+                                <span id="queuePosition">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Network Load:</span>
+                                <span class="text-blue-400" id="networkLoad">Low</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Avg Wait Time:</span>
+                                <span id="avgWaitTime">5-10 min</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="glass rounded-xl p-6">
+                        <h2 class="text-xl font-bold mb-4 flex items-center">
+                            <i class="fas fa-history mr-3 text-yellow-400"></i>
+                            Recent Activity
+                        </h2>
+                        <div class="space-y-3" id="recentActivity">
+                            <div class="text-center text-gray-400 py-4">
+                                <i class="fas fa-clock text-2xl mb-2"></i>
+                                <p class="text-sm">No recent activity</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Results Modal -->
+    <div id="jobModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="glass-dark rounded-xl p-6 max-w-2xl w-full">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-xl font-bold" id="modalJobTitle">Job Results</h3>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-white">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="modalContent">
+                    <!-- Modal content will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User API Script -->
+    <script src="user-api.js"></script>
+</body>
+</html>
