@@ -8,6 +8,8 @@ class VFTMinerClient {
         this.wallet = localStorage.getItem('vft_miner_wallet') || null;
         this.isOnline = false;
         this.currentJob = null;
+        this.sessionId = this.generateSessionId();
+        this.heartbeatInterval = null;
         this.stats = {
             earnedVFT: 0,
             completedJobs: 0,
@@ -27,8 +29,17 @@ class VFTMinerClient {
     async init() {
         await this.loadMinerData();
         await this.connectToNetwork();
+        if (this.isOnline && this.minerId) {
+            await this.registerMinerSession();
+            this.startHeartbeat();
+        }
         this.startRealTimeUpdates();
         this.updateUI();
+        
+        // Handle page unload to mark miner offline
+        window.addEventListener('beforeunload', () => {
+            this.markMinerOffline();
+        });
     }
 
     async loadMinerData() {
@@ -72,6 +83,11 @@ class VFTMinerClient {
                 this.wallet = walletAddress;
                 localStorage.setItem('vft_miner_id', this.minerId);
                 localStorage.setItem('vft_miner_wallet', this.wallet);
+                
+                // Register session after successful registration
+                await this.registerMinerSession();
+                this.startHeartbeat();
+                
                 alert('Miner registered successfully! Welcome to the VFT network.');
             } else {
                 throw new Error(result.message || 'Registration failed');
@@ -120,6 +136,11 @@ class VFTMinerClient {
                 document.getElementById('nodeStatus').className = 'status-indicator bg-green-500';
                 document.getElementById('statusText').textContent = 'Online';
                 document.getElementById('statusText').className = 'text-green-400 font-medium';
+                
+                // Load miner stats from database if registered
+                if (this.minerId) {
+                    await this.loadMinerStats();
+                }
             }
         } catch (error) {
             this.isOnline = false;
@@ -178,13 +199,34 @@ class VFTMinerClient {
         }, 1000);
     }
 
-    completeJob() {
+    async completeJob() {
         if (this.currentJob) {
-            this.stats.completedJobs++;
-            this.stats.earnedVFT += this.currentJob.reward / 1000; // Convert to VFT
-            this.addEarningHistory(this.currentJob);
-            this.currentJob = null;
-            this.updateUI();
+            try {
+                // Report job completion to backend
+                await fetch(`${this.baseUrl}/jobs/${this.currentJob.id}/complete`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        miner_id: this.minerId,
+                        completion_time: Date.now(),
+                        result_hash: 'mock_result_hash'
+                    })
+                });
+                
+                this.stats.completedJobs++;
+                this.stats.earnedVFT += this.currentJob.reward / 1000; // Convert to VFT
+                this.addEarningHistory(this.currentJob);
+                this.currentJob = null;
+                this.updateUI();
+                
+                // Update stats in database
+                await this.updateMinerStats();
+                
+            } catch (error) {
+                console.error('Failed to report job completion:', error);
+            }
             
             // Check for new jobs after completion
             setTimeout(() => this.checkForJobs(), 5000);
@@ -252,8 +294,19 @@ class VFTMinerClient {
             const response = await fetch(`${this.baseUrl}/platform/stats`);
             const stats = await response.json();
             
+            // Update network stats with real data
             document.getElementById('activeMiners').textContent = stats.activeMiners || 0;
             document.getElementById('pendingJobs').textContent = stats.pendingJobs || 0;
+            document.getElementById('networkHash').textContent = this.formatNumber(stats.totalTflops || 0);
+            document.getElementById('poolBalance').textContent = this.formatNumber(stats.miningPoolBalance || 0);
+            
+            // Update miner rank if available
+            if (stats.minerRankings && this.minerId) {
+                const minerRank = stats.minerRankings.find(r => r.minerId === this.minerId);
+                if (minerRank) {
+                    document.getElementById('minerRank').textContent = `#${minerRank.rank}`;
+                }
+            }
         } catch (error) {
             console.error('Failed to update network stats:', error);
         }
@@ -278,9 +331,120 @@ class VFTMinerClient {
         }
     }
 
+    generateSessionId() {
+        return 'miner_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    }
+
+    async registerMinerSession() {
+        if (!this.minerId || !this.wallet) return;
+        
+        try {
+            await fetch(`${this.baseUrl}/miners/session`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    session_id: this.sessionId,
+                    miner_id: this.minerId,
+                    wallet_address: this.wallet,
+                    hardware_specs: this.detectHardware(),
+                    platform: 'desktop'
+                })
+            });
+            this.isOnline = true;
+        } catch (error) {
+            console.error('Failed to register miner session:', error);
+        }
+    }
+
+    async markMinerOffline() {
+        if (!this.minerId || !this.isOnline) return;
+        
+        try {
+            await fetch(`${this.baseUrl}/miners/session/${this.sessionId}`, {
+                method: 'DELETE'
+            });
+            this.isOnline = false;
+        } catch (error) {
+            console.error('Failed to mark miner offline:', error);
+        }
+    }
+
+    async loadMinerStats() {
+        try {
+            const response = await fetch(`${this.baseUrl}/miners/${this.minerId}/stats`);
+            const stats = await response.json();
+            
+            if (stats) {
+                this.stats.earnedVFT = stats.totalEarned || 0;
+                this.stats.completedJobs = stats.completedJobs || 0;
+                this.stats.reputation = stats.reputation || 100;
+            }
+        } catch (error) {
+            console.error('Failed to load miner stats:', error);
+        }
+    }
+
+    async updateMinerStats() {
+        if (!this.minerId) return;
+        
+        try {
+            await fetch(`${this.baseUrl}/miners/${this.minerId}/stats`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    earned_vft: this.stats.earnedVFT,
+                    completed_jobs: this.stats.completedJobs,
+                    reputation: this.stats.reputation,
+                    hardware_stats: this.hardware
+                })
+            });
+        } catch (error) {
+            console.error('Failed to update miner stats:', error);
+        }
+    }
+
+    startHeartbeat() {
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+        }
+        
+        this.heartbeatInterval = setInterval(async () => {
+            if (this.minerId && this.isOnline) {
+                try {
+                    await fetch(`${this.baseUrl}/miners/session/${this.sessionId}/heartbeat`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            timestamp: Date.now(),
+                            hardware_stats: this.hardware,
+                            current_job: this.currentJob ? this.currentJob.id : null,
+                            uptime: Date.now() - this.stats.uptime
+                        })
+                    });
+                } catch (error) {
+                    console.error('Miner heartbeat failed:', error);
+                }
+            }
+        }, 30000); // Every 30 seconds
+    }
+
+    formatNumber(num) {
+        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+        return num.toString();
+    }
+
     startRealTimeUpdates() {
         // Update uptime every second
         const startTime = Date.now();
+        this.stats.uptime = startTime;
+        
         setInterval(() => {
             const uptime = Date.now() - startTime;
             const hours = Math.floor(uptime / (1000 * 60 * 60));
@@ -293,7 +457,7 @@ class VFTMinerClient {
 
         // Check for jobs every 10 seconds
         setInterval(() => {
-            if (!this.currentJob) {
+            if (!this.currentJob && this.isOnline) {
                 this.checkForJobs();
             }
         }, 10000);
@@ -302,6 +466,13 @@ class VFTMinerClient {
         setInterval(() => {
             this.updateNetworkStats();
         }, 30000);
+
+        // Update miner stats in database every 2 minutes
+        setInterval(() => {
+            if (this.minerId) {
+                this.updateMinerStats();
+            }
+        }, 120000);
 
         // Simulate hardware fluctuations when idle
         setInterval(() => {
@@ -332,4 +503,22 @@ function disconnect() {
 // Initialize miner client when page loads
 document.addEventListener('DOMContentLoaded', () => {
     window.minerClient = new VFTMinerClient();
+});
+
+// Handle page visibility changes to pause/resume operations
+document.addEventListener('visibilitychange', () => {
+    if (window.minerClient) {
+        if (document.hidden) {
+            // Page is hidden, reduce update frequency
+            if (window.minerClient.heartbeatInterval) {
+                clearInterval(window.minerClient.heartbeatInterval);
+            }
+        } else {
+            // Page is visible again, resume normal operations
+            if (window.minerClient.isOnline) {
+                window.minerClient.startHeartbeat();
+                window.minerClient.updateNetworkStats();
+            }
+        }
+    }
 });
