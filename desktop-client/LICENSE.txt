@@ -1,0 +1,37 @@
+VFT DESKTOP CLIENT LICENSE AGREEMENT
+
+Copyright (c) 2024 VFT Chain
+
+IMPORTANT: PLEASE READ THIS LICENSE AGREEMENT CAREFULLY BEFORE USING THE SOFTWARE.
+
+By installing, copying, or otherwise using the VFT Desktop Client, you agree to be bound by the terms of this license agreement.
+
+1. GRANT OF LICENSE
+VFT Chain grants you a non-exclusive, non-transferable license to use the VFT Desktop Client software for mining and participating in the VFT network.
+
+2. PERMITTED USE
+- You may install and use the software on multiple computers that you own or control
+- You may use the software for cryptocurrency mining on the VFT network
+- You may connect your Phantom wallet to manage rewards
+
+3. RESTRICTIONS
+- You may not reverse engineer, decompile, or disassemble the software
+- You may not modify the software without explicit permission
+- You may not use the software for any illegal purposes
+
+4. GPU MINING
+The software will detect and utilize your GPU for mining operations. By using this software, you acknowledge that:
+- Mining will consume electricity and generate heat
+- You are responsible for adequate cooling and power supply
+- Mining performance depends on your hardware capabilities
+
+5. NO WARRANTY
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.
+
+6. LIMITATION OF LIABILITY
+IN NO EVENT SHALL VFT CHAIN BE LIABLE FOR ANY DAMAGES ARISING FROM THE USE OF THIS SOFTWARE.
+
+7. TERMINATION
+This license is effective until terminated. You may terminate it at any time by destroying the software and all copies.
+
+By clicking "I Agree" or installing the software, you acknowledge that you have read and understood this agreement and agree to be bound by its terms.

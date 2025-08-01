@@ -1,0 +1,35 @@
+{
+  "appId": "com.vftchain.desktop",
+  "productName": "VFT Desktop Client",
+  "directories": {
+    "output": "dist-installer"
+  },
+  "files": [
+    "src/**/*",
+    "assets/**/*",
+    "node_modules/**/*",
+    "package.json"
+  ],
+  "win": {
+    "target": "nsis",
+    "icon": "assets/icon.ico",
+    "publisherName": "VFT Chain",
+    "artifactName": "VFT-Desktop-Setup-${version}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": true,
+    "allowToChangeInstallationDirectory": true,
+    "allowElevation": true,
+    "installerIcon": "assets/icon.ico",
+    "uninstallerIcon": "assets/icon.ico",
+    "installerHeaderIcon": "assets/icon.ico",
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "VFT Desktop Client",
+    "license": "LICENSE.txt",
+    "warningsAsErrors": false,
+    "menuCategory": true,
+    "include": "installer-scripts/installer.nsh"
+  }
+}

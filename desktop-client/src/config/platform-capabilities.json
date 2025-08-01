@@ -1,0 +1,149 @@
+{
+  "platform": {
+    "name": "VFT Research Computing Platform",
+    "version": "3.1.0",
+    "type": "distributed-gpu-compute"
+  },
+  "capabilities": {
+    "max_data_size": {
+      "value": 1,
+      "unit": "TB",
+      "note": "Per job, can be increased for enterprise"
+    },
+    "max_gpus_per_job": 1000,
+    "supported_gpu_types": [
+      {
+        "name": "NVIDIA H100",
+        "memory": "80GB",
+        "compute": "2000 TFLOPS",
+        "features": ["NVLink", "FP8", "Transformer Engine"]
+      },
+      {
+        "name": "NVIDIA A100", 
+        "memory": "40GB/80GB",
+        "compute": "1248 TFLOPS",
+        "features": ["NVLink", "MIG", "TF32"]
+      },
+      {
+        "name": "RTX 4090",
+        "memory": "24GB",
+        "compute": "330 TFLOPS",
+        "features": ["DLSS 3", "AV1", "RT Cores"]
+      },
+      {
+        "name": "RTX A6000",
+        "memory": "48GB", 
+        "compute": "310 TFLOPS",
+        "features": ["NVLink", "ECC", "Pro Drivers"]
+      }
+    ],
+    "frameworks": [
+      "PyTorch",
+      "TensorFlow",
+      "JAX",
+      "RAPIDS",
+      "Triton",
+      "CUDA",
+      "OpenCL",
+      "Custom Docker"
+    ],
+    "compute_types": [
+      {
+        "id": "batch-processing",
+        "name": "Batch Processing",
+        "description": "Process large datasets in parallel chunks",
+        "use_cases": ["ETL", "Data preprocessing", "Feature extraction"]
+      },
+      {
+        "id": "distributed-training",
+        "name": "Distributed Model Training", 
+        "description": "Train models across multiple GPUs/nodes",
+        "use_cases": ["LLM training", "Computer vision", "Scientific ML"]
+      },
+      {
+        "id": "parallel-inference",
+        "name": "Parallel Inference",
+        "description": "Run inference on millions of samples",
+        "use_cases": ["Batch predictions", "Model evaluation", "A/B testing"]
+      },
+      {
+        "id": "simulation",
+        "name": "Scientific Simulation",
+        "description": "Run complex scientific simulations",
+        "use_cases": ["Monte Carlo", "Molecular dynamics", "Climate modeling"]
+      }
+    ],
+    "data_sources": [
+      {
+        "type": "local",
+        "name": "Local Path",
+        "max_size": "100GB",
+        "protocols": ["file://"]
+      },
+      {
+        "type": "s3",
+        "name": "Amazon S3",
+        "max_size": "unlimited",
+        "protocols": ["s3://", "s3a://"]
+      },
+      {
+        "type": "http",
+        "name": "HTTP/HTTPS",
+        "max_size": "1TB",
+        "protocols": ["http://", "https://"]
+      },
+      {
+        "type": "ipfs", 
+        "name": "IPFS",
+        "max_size": "1TB",
+        "protocols": ["ipfs://", "ipns://"]
+      }
+    ]
+  },
+  "pricing": {
+    "currency": "VFT",
+    "gpu_rates": {
+      "h100": 12.0,
+      "a100": 8.0,
+      "a6000": 6.0,
+      "4090": 4.0,
+      "default": 2.5
+    },
+    "storage_rate": 0.001,
+    "network_rate": 0.0005,
+    "priority_multipliers": {
+      "low": 0.8,
+      "normal": 1.0,
+      "high": 1.5,
+      "critical": 2.0
+    }
+  },
+  "limits": {
+    "max_runtime_hours": 720,
+    "max_checkpoints": 100,
+    "max_concurrent_jobs": 50,
+    "max_output_size_gb": 100,
+    "min_gpu_memory_gb": 8,
+    "max_env_vars": 100,
+    "max_dependencies": 500
+  },
+  "features": {
+    "automatic_checkpointing": true,
+    "real_time_logs": true,
+    "performance_metrics": true,
+    "cost_alerts": true,
+    "data_sharding": true,
+    "compression": true,
+    "encryption": true,
+    "priority_queuing": true,
+    "spot_instances": true,
+    "dedicated_nodes": false
+  },
+  "network": {
+    "min_bandwidth_gbps": 10,
+    "max_bandwidth_gbps": 100,
+    "interconnect": ["InfiniBand", "NVLink", "PCIe"],
+    "topology": "fat-tree",
+    "redundancy": "N+2"
+  }
+}

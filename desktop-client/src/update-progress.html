@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Downloading Update</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            user-select: none;
+            cursor: default;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        h2 {
+            margin: 0 0 20px 0;
+            font-size: 18px;
+            font-weight: 500;
+            color: #00ff88;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88 0%, #00cc66 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #888;
+            margin-top: 10px;
+        }
+
+        .percentage {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00ff88;
+            margin: 10px 0;
+        }
+
+        .speed {
+            font-size: 14px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Downloading Update...</h2>
+        <div class="percentage">0%</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+        <div class="stats">
+            <span id="downloaded">0 MB / 0 MB</span>
+            <span class="speed" id="speed">0 MB/s</span>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 MB';
+            const mb = bytes / (1024 * 1024);
+            return mb.toFixed(1) + ' MB';
+        }
+
+        ipcRenderer.on('download-progress', (event, progress) => {
+            // Update progress bar
+            document.getElementById('progress').style.width = progress.percent + '%';
+            
+            // Update percentage
+            document.querySelector('.percentage').textContent = progress.percent.toFixed(1) + '%';
+            
+            // Update downloaded/total
+            document.getElementById('downloaded').textContent = 
+                `${formatBytes(progress.transferred)} / ${formatBytes(progress.total)}`;
+            
+            // Update speed
+            document.getElementById('speed').textContent = 
+                formatBytes(progress.bytesPerSecond) + '/s';
+        });
+    </script>
+</body>
+</html>

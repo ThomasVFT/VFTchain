@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VFT Platform - Decentralized AI Mining Network</title>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles/bright-theme.css">
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <img src="../assets/VFT_logo.png" alt="VFT" onerror="this.src='../assets/icon.png'">
+                </div>
+                <div class="logo-text">VFT Platform</div>
+            </div>
+            
+            <div class="mode-switcher">
+                <button class="mode-btn active" id="userModeBtn">
+                    <i class="fas fa-user"></i>
+                    User Mode
+                </button>
+                <button class="mode-btn" id="minerModeBtn">
+                    <i class="fas fa-microchip"></i>
+                    Miner Mode
+                </button>
+            </div>
+            
+            <button class="btn btn-sm" id="perf-toggle-btn" style="margin-right: 16px;" onclick="togglePerformancePanel()">
+                <i class="fas fa-tachometer-alt"></i> Performance
+            </button>
+            
+            <div class="network-status">
+                <div class="status-item">
+                    <div class="status-dot" id="networkDot"></div>
+                    <span id="networkText">Network: Connecting...</span>
+                </div>
+                <div class="status-item">
+                    <span id="minerCount">0 Miners</span>
+                </div>
+                <button class="btn btn-primary" id="connectWalletBtn">Connect Wallet</button>
+            </div>
+        </header>
+        
+        <main class="main">
+            <!-- USER MODE -->
+            <div id="userMode">
+                <aside class="sidebar">
+                    <div class="card glass-hover">
+                        <div class="card-header">
+                            <i class="fas fa-bolt"></i>
+                            Quick Actions
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%;" id="showJobModalBtn">
+                            <i class="fas fa-server"></i>
+                            Submit Compute Job
+                        </button>
+                        <button class="btn btn-secondary" style="width: 100%; margin-top: 12px;" id="showModelManagerBtn">
+                            <i class="fas fa-cube"></i>
+                            Model Library
+                        </button>
+                        <button class="btn btn-secondary" style="width: 100%; margin-top: 12px;" id="showTemplatesBtn">
+                            <i class="fas fa-file-code"></i>
+                            Job Templates
+                        </button>
+                    </div>
+                    
+                    <div class="card glass-hover">
+                        <div class="card-header">
+                            <i class="fas fa-chart-line"></i>
+                            Compute Statistics
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="activeJobCount">0</div>
+                                <div class="stat-label">Active Jobs</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="completedJobCount">0</div>
+                                <div class="stat-label">Completed</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px;">
+                                <span style="color: var(--text-dim);">Total Compute Hours</span>
+                                <span id="totalComputeHours">0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px;">
+                                <span style="color: var(--text-dim);">Data Processed</span>
+                                <span id="totalDataProcessed">0 TB</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                                <span style="color: var(--text-dim);">Avg Job Time</span>
+                                <span id="avgJobTime">0h 0m</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card glass-hover">
+                        <div class="card-header">
+                            <i class="fas fa-server"></i>
+                            Available Miners
+                        </div>
+                        <div id="minerList">
+                            <p style="color: var(--text-dim); text-align: center; padding: 20px;">
+                                Connect to network to see available miners
+                            </p>
+                        </div>
+                    </div>
+                </aside>
+                
+                <section class="content">
+                    <div class="content-tabs">
+                        <button class="content-tab-btn active" data-tab-target="jobs-panel">Active Jobs</button>
+                        <button class="content-tab-btn" data-tab-target="queue-panel">Job Queue</button>
+                        <button class="content-tab-btn" data-tab-target="results-panel">Results</button>
+                        <button class="content-tab-btn" data-tab-target="analytics-panel">Analytics</button>
+                    </div>
+                    
+                    <!-- Active Jobs Tab -->
+                    <div class="content-panel active" id="jobs-panel">
+                        <div class="card">
+                            <div class="card-header">
+                                <span>Active Jobs</span>
+                                <button class="btn btn-sm" id="batchSubmitBtn">
+                                    <i class="fas fa-layer-group"></i> Batch Submit
+                                </button>
+                            </div>
+                            <div id="activeJobsList">
+                                <p style="color: var(--text-dim); text-align: center; padding: 40px;">
+                                    No active jobs. Submit a job to get started!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Job Queue Tab -->
+                    <div class="content-panel" id="queue-panel">
+                        <div class="card">
+                            <div class="card-header">
+                                <span>Job Queue Management</span>
+                                <div class="queue-filters">
+                                    <select class="select-sm" id="queueFilter">
+                                        <option value="all">All Jobs</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="running">Running</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="failed">Failed</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="jobQueueList">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Job ID</th>
+                                            <th>Name</th>
+                                            <th>Type</th>
+                                            <th>Resources</th>
+                                            <th>Status</th>
+                                            <th>Progress</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="queueTableBody">
+                                        <tr>
+                                            <td colspan="7" style="text-align: center; color: var(--text-dim);">No jobs in queue</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Results Tab -->
+                    <div class="content-panel" id="results-panel">
+                        <div class="card">
+                            <div class="card-header">
+                                <span>Job Results & Outputs</span>
+                                <button class="btn btn-sm" id="exportResultsBtn">
+                                    <i class="fas fa-download"></i> Export All
+                                </button>
+                            </div>
+                            <div id="resultsContainer">
+                                <div class="results-grid" id="resultsGrid">
+                                    <!-- Results cards will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Analytics Tab -->
+                    <div class="content-panel" id="analytics-panel">
+                        <div class="card">
+                            <div class="card-header">Compute Analytics</div>
+                            <div class="analytics-grid">
+                                <div class="metric-card">
+                                    <div class="metric-icon"><i class="fas fa-microchip"></i></div>
+                                    <div class="metric-content">
+                                        <div class="metric-value" id="totalGPUHours">0</div>
+                                        <div class="metric-label">GPU Hours Used</div>
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-icon"><i class="fas fa-database"></i></div>
+                                    <div class="metric-content">
+                                        <div class="metric-value" id="totalDataProcessed">0 TB</div>
+                                        <div class="metric-label">Data Processed</div>
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-icon"><i class="fas fa-dollar-sign"></i></div>
+                                    <div class="metric-content">
+                                        <div class="metric-value" id="totalCostVFT">0</div>
+                                        <div class="metric-label">Total Cost (VFT)</div>
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-icon"><i class="fas fa-tachometer-alt"></i></div>
+                                    <div class="metric-content">
+                                        <div class="metric-value" id="avgPerformance">0</div>
+                                        <div class="metric-label">Avg TFLOPS</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-container" style="margin-top: 24px;">
+                                <canvas id="usageChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            
+            <!-- MINER MODE -->
+            <div id="minerMode" style="display: none;">
+                <aside class="sidebar">
+                    <div class="card">
+                        <div class="card-header">Mining Control</div>
+                        <button class="btn btn-success" style="width: 100%;" id="miningBtn">
+                            Start Mining
+                        </button>
+                        
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label class="label">GPU Utilization Limit</label>
+                            <input type="range" class="input" min="10" max="100" value="80" id="gpuLimit">
+                            <div style="text-align: center; margin-top: 8px;">
+                                <span id="gpuLimitValue">80%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">Earnings</div>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="currentRate">0</div>
+                                <div class="stat-label">VFT/hour</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalEarned">0</div>
+                                <div class="stat-label">Total VFT</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">My GPUs</div>
+                        <div id="gpuList">
+                            <p style="color: var(--text-dim); text-align: center; padding: 20px;">
+                                Switch to Miner Mode to see GPUs
+                            </p>
+                        </div>
+                    </div>
+                </aside>
+                
+                <section class="content">
+                    <div class="card">
+                        <div class="card-header">Processing Jobs</div>
+                        <div id="processingJobs">
+                            <p style="color: var(--text-dim); text-align: center; padding: 40px;">
+                                Start mining to receive jobs
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">Mining Terminal</div>
+                        <div class="terminal" id="miningTerminal">
+                            <div class="terminal-line">
+                                <span class="terminal-prompt">[VFT]$</span> Miner ready...
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            
+            <aside class="activity">
+                <div class="card glass-hover">
+                    <div class="card-header">
+                        <i class="fas fa-network-wired"></i>
+                        Network Activity
+                    </div>
+                    <div class="terminal" id="activityLog" style="color: #10b981; max-height: 300px;">
+                        <div class="terminal-line fade-in">
+                            <span class="terminal-prompt" style="color: #667eea;">[VFT]</span> Platform initialized
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">Platform Info</div>
+                    <div style="font-size: 12px; color: var(--text-dim); line-height: 1.8;">
+                        <div><strong>Version:</strong> 3.1.0</div>
+                        <div><strong>Network:</strong> <span id="networkName">Mainnet</span></div>
+                        <div><strong>Token:</strong> VFT (Solana)</div>
+                        <div><strong>Status:</strong> <span style="color: var(--success);">Operational</span></div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+    
+    <!-- Research Computing Job Submission Modal -->
+    <div class="modal" id="jobModal">
+        <div class="modal-content" style="max-width: 900px; width: 90%;">
+            <div class="modal-header">
+                <i class="fas fa-server"></i> Submit Research Computing Job
+                <button class="modal-close-btn" onclick="closeModal('jobModal')" title="Close" style="float:right; background:none; border:none; font-size:22px; cursor:pointer; color:#fff; margin-left:12px;">&times;</button>
+            </div>
+            
+            <div class="modal-tabs">
+                <button class="tab-btn active" data-tab-target="job-config">Job Configuration</button>
+                <button class="tab-btn" data-tab-target="data-config">Data & Storage</button>
+                <button class="tab-btn" data-tab-target="resource-config">Resource Requirements</button>
+                <button class="tab-btn" data-tab-target="advanced-config">Advanced Settings</button>
+            </div>
+            
+            <!-- Job Configuration Tab -->
+            <div class="tab-content active" id="job-config">
+                <div class="form-group">
+                    <label class="label">Job Name</label>
+                    <input type="text" class="input" id="jobName" placeholder="e.g., protein-folding-analysis-batch-42">
+                </div>
+                
+                <div class="form-group">
+                    <label class="label">Compute Type</label>
+                    <select class="select" id="computeType">
+                        <option value="batch-processing">Batch Processing</option>
+                        <option value="distributed-training">Distributed Model Training</option>
+                        <option value="parallel-inference">Parallel Inference</option>
+                        <option value="data-preprocessing">Large-Scale Data Preprocessing</option>
+                        <option value="simulation">Scientific Simulation</option>
+                        <option value="custom-script">Custom Python/R Script</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="label">Framework</label>
+                    <select class="select" id="framework">
+                        <option value="pytorch">PyTorch</option>
+                        <option value="tensorflow">TensorFlow</option>
+                        <option value="jax">JAX</option>
+                        <option value="rapids">RAPIDS (GPU DataFrame)</option>
+                        <option value="custom">Custom/Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="label">Job Script / Code</label>
+                    <div class="code-upload-area">
+                        <button class="btn btn-secondary" id="uploadScriptBtn">
+                            <i class="fas fa-file-code"></i> Upload Script
+                        </button>
+                        <span id="scriptFileName" style="margin-left: 12px; color: var(--text-dim);">No file selected</span>
+                    </div>
+                    <textarea class="textarea code-editor" id="jobScript" placeholder="# Or paste your code here\nimport torch\nimport pandas as pd\n\n# Your processing code..." style="font-family: 'Consolas', 'Monaco', monospace; min-height: 200px;"></textarea>
+                </div>
+            </div>
+            
+            <!-- Data & Storage Tab -->
+            <div class="tab-content" id="data-config">
+                <div class="form-group">
+                    <label class="label">Input Data Source</label>
+                    <div class="data-source-grid">
+                        <label class="data-source-option">
+                            <input type="radio" name="dataSource" value="local" checked>
+                            <div class="option-content">
+                                <i class="fas fa-hdd"></i>
+                                <span>Local Path</span>
+                            </div>
+                        </label>
+                        <label class="data-source-option">
+                            <input type="radio" name="dataSource" value="s3">
+                            <div class="option-content">
+                                <i class="fab fa-aws"></i>
+                                <span>S3 Bucket</span>
+                            </div>
+                        </label>
+                        <label class="data-source-option">
+                            <input type="radio" name="dataSource" value="http">
+                            <div class="option-content">
+                                <i class="fas fa-cloud-download-alt"></i>
+                                <span>HTTP/HTTPS</span>
+                            </div>
+                        </label>
+                        <label class="data-source-option">
+                            <input type="radio" name="dataSource" value="ipfs">
+                            <div class="option-content">
+                                <i class="fas fa-network-wired"></i>
+                                <span>IPFS</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="label">Dataset Location</label>
+                    <input type="text" class="input" id="dataLocation" placeholder="e.g., /datasets/genomics/batch_042/*.fastq or s3://research-data/experiments/">
+                </div>
+                
+                <div class="form-group">
+                    <label class="label">Estimated Data Size</label>
+                    <div style="display: flex; gap: 12px;">
+                        <input type="number" class="input" id="dataSize" placeholder="Amount" style="flex: 1;">
+                        <select class="select" id="dataSizeUnit" style="width: 120px;">
+                            <option value="GB">GB</option>
+                            <option value="TB">TB</option>
+                            <option value="PB">PB</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="label">Output Storage</label>
+                    <select class="select" id="outputStorage">
+                        <option value="download">Direct Download (< 10GB)</option>
+                        <option value="s3">S3 Bucket</option>
+                        <option value="ipfs">IPFS (Distributed)</option>
+                        <option value="stream">Stream Results</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="label">Data Preprocessing</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" id="enableSharding"> Enable automatic data sharding</label>
+                        <label><input type="checkbox" id="enableCompression"> Compress data transfers</label>
+                        <label><input type="checkbox" id="enableCaching"> Cache preprocessed data</label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Resource Requirements Tab -->
+            <div class="tab-content" id="resource-config">
+                <div class="form-group">
+                    <label class="label">GPU Requirements</label>
+                    <div class="resource-grid">
+                        <div class="resource-item">
+                            <label>Number of GPUs</label>
+                            <input type="number" class="input" id="gpuCount" value="1" min="1" max="1000">
+                        </div>
+                        <div class="resource-item">
+                            <label>Min GPU Memory (GB)</label>
+                            <input type="number" class="input" id="minGpuMemory" value="24" min="8" max="80">
+                        </div>
+                        <div class="resource-item">
+                            <label>GPU Type Preference</label>
+                            <select class="select" id="gpuType">
+                                <option value="any">Any Available</option>
+                                <option value="a100">NVIDIA A100</option>
+                                <option value="h100">NVIDIA H100</option>
+                                <option value="4090">RTX 4090</option>
+                                <option value="a6000">RTX A6000</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="label">System Memory (RAM)</label>
+                    <input type="number" class="input" id="systemMemory" value="64" min="16"> GB
+                </div>
+                
+                <div class="form-group">
+                    <label class="label">Storage Requirements</label>
+                    <input type="number" class="input" id="storageRequired" value="100" min="10"> GB temporary storage
+                </div>
+                
+                <div class="form-group">
+                    <label class="label">Estimated Runtime</label>
+                    <div style="display: flex; gap: 12px;">
+                        <input type="number" class="input" id="estimatedHours" placeholder="Hours" style="flex: 1;">
+                        <input type="number" class="input" id="estimatedMinutes" placeholder="Minutes" style="flex: 1;">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="label">Job Priority</label>
+                    <select class="select" id="jobPriority">
+                        <option value="low">Low - Best price</option>
+                        <option value="normal" selected>Normal - Balanced</option>
+                        <option value="high">High - Faster allocation</option>
+                        <option value="critical">Critical - Immediate start</option>
+                    </select>
+                </div>
+                
+                <div class="cost-estimate">
+                    <h4>Transparent Cost Breakdown</h4>
+                    <div id="costBreakdown" class="cost-breakdown-container">
+                        <!-- Dynamic cost breakdown will be inserted here -->
+                    </div>
+                    
+                    <div class="storage-options" style="margin-top: 16px; padding: 12px; background: var(--surface); border-radius: 8px;">
+                        <h5 style="margin-bottom: 8px;">Storage Options</h5>
+                        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <input type="checkbox" id="autoDeleteAfterDownload" checked>
+                            <span>Auto-delete after download (Recommended - No storage costs)</span>
+                        </label>
+                        <div id="extendedStorageOption" style="display: none;">
+                            <label>Keep results for:
+                                <input type="number" id="extendedStorageDays" value="0" min="0" max="365" style="width: 60px; margin: 0 4px;">
+                                days (0.1 VFT/GB/month after 7 free days)
+                            </label>
+                        </div>
+                        <label style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                            <input type="checkbox" id="enableCDNAcceleration">
+                            <span>Enable CDN acceleration (+0.02 VFT/GB - Optional for faster downloads)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Advanced Settings Tab -->
+            <div class="tab-content" id="advanced-config">
+                <div class="form-group">
+                    <label class="label">Environment Variables</label>
+                    <textarea class="textarea" id="envVars" placeholder="KEY=value\nANOTHER_KEY=another_value" style="font-family: monospace;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="label">Dependencies (requirements.txt or environment.yml)</label>
+                    <textarea class="textarea" id="dependencies" placeholder="numpy==1.21.0\npandas>=1.3.0\nscikit-learn\ntorch==2.0.0" style="font-family: monospace;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="label">Docker Image (optional)</label>
+                    <input type="text" class="input" id="dockerImage" placeholder="e.g., nvcr.io/nvidia/pytorch:23.12-py3">
+                </div>
+                
+                <div class="form-group">
+                    <label class="label">Checkpointing</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" id="enableCheckpointing" checked> Enable automatic checkpointing</label>
+                        <label><input type="checkbox" id="resumeFromCheckpoint"> Resume from last checkpoint</label>
+                    </div>
+                    <input type="number" class="input" id="checkpointInterval" value="30" min="5" style="width: 100px; margin-top: 8px;"> minutes between checkpoints
+                </div>
+                
+                <div class="form-group">
+                    <label class="label">Monitoring & Alerts</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" id="enableMetrics" checked> Collect performance metrics</label>
+                        <label><input type="checkbox" id="enableAlerts"> Send completion alerts</label>
+                        <label><input type="checkbox" id="enableLogs" checked> Stream logs in real-time</label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="label">Network Requirements</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" id="requireHighBandwidth"> High bandwidth (>10Gbps)</label>
+                        <label><input type="checkbox" id="requireLowLatency"> Low latency communication</label>
+                        <label style="color: var(--success);">✓ P2P Data Transfer (Always Enabled)</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="btn-group" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                <button class="btn btn-secondary" id="saveJobTemplate">
+                    <i class="fas fa-save"></i> Save as Template
+                </button>
+                <div style="flex: 1;"></div>
+                <button class="btn btn-secondary" id="validateJobBtn">
+                    <i class="fas fa-check"></i> Validate
+                </button>
+                <button class="btn btn-primary" id="submitJobBtn">
+                    <i class="fas fa-rocket"></i> Submit Job
+                </button>
+                <button class="btn btn-secondary" id="cancelJobModalBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Model Manager Modal -->
+    <div class="modal" id="modelModal">
+        <div class="modal-content">
+            <div class="modal-header">AI Model Manager</div>
+            <button class="modal-close-btn" onclick="closeModal('modelModal')" title="Close" style="float:right; background:none; border:none; font-size:22px; cursor:pointer; color:#fff; margin-left:12px;">&times;</button>
+            
+            <p style="color: var(--text-dim); margin-bottom: 20px;">
+                Download models locally or use models provided by the network
+            </p>
+            
+            <div class="model-grid" id="modelGrid">
+                <!-- Models populated here -->
+            </div>
+            
+            <div class="btn-group" style="margin-top: 24px;">
+                <button class="btn btn-secondary" id="closeModelModalBtn">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Batch Job Submission Modal -->
+    <div class="modal" id="batchJobModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <i class="fas fa-layer-group"></i> Batch Job Submission
+                <button class="modal-close-btn" onclick="closeModal('batchJobModal')" title="Close" style="float:right; background:none; border:none; font-size:22px; cursor:pointer; color:#fff; margin-left:12px;">&times;</button>
+            </div>
+            
+            <div class="form-group">
+                <label class="label">Job Definition File</label>
+                <div class="code-upload-area">
+                    <button class="btn btn-secondary" id="uploadBatchBtn">
+                        <i class="fas fa-file-upload"></i> Upload JSON/YAML
+                    </button>
+                    <span id="batchFileName" style="margin-left: 12px; color: var(--text-dim);">No file selected</span>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="label">Batch Definition</label>
+                <textarea class="textarea code-editor" id="batchDefinition" placeholder='{
+  "jobs": [
+    {
+      "name": "analysis-batch-1",
+      "script": "process_data.py",
+      "data_path": "/data/batch1/*.csv",
+      "gpu_count": 10,
+      "parameters": {
+        "threshold": 0.95
+      }
+    },
+    {
+      "name": "analysis-batch-2",
+      "script": "process_data.py",
+      "data_path": "/data/batch2/*.csv",
+      "gpu_count": 10,
+      "parameters": {
+        "threshold": 0.90
+      }
+    }
+  ],
+  "common_settings": {
+    "framework": "pytorch",
+    "gpu_type": "a100",
+    "priority": "normal"
+  }
+}' style="font-family: monospace; min-height: 300px;"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label class="label">Batch Options</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="parallelExecution" checked> Execute jobs in parallel</label>
+                    <label><input type="checkbox" id="stopOnError"> Stop batch on first error</label>
+                    <label><input type="checkbox" id="shareResources"> Share resources between jobs</label>
+                </div>
+            </div>
+            
+            <div class="batch-summary" id="batchSummary" style="background: var(--bg-dark); padding: 16px; border-radius: 8px; margin-top: 20px;">
+                <h4 style="margin-bottom: 12px;">Batch Summary</h4>
+                <div id="batchSummaryContent" style="font-size: 13px; color: var(--text-dim);">Parse batch definition to see summary</div>
+            </div>
+            
+            <div class="btn-group" style="margin-top: 24px;">
+                <button class="btn btn-secondary" id="validateBatchBtn">
+                    <i class="fas fa-check"></i> Validate Batch
+                </button>
+                <button class="btn btn-primary" id="submitBatchBtn">
+                    <i class="fas fa-rocket"></i> Submit Batch
+                </button>
+                <button class="btn btn-secondary" id="cancelBatchModalBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Job Logs Modal -->
+    <div class="modal" id="logsModal">
+        <div class="modal-content" style="max-width: 1000px;">
+            <div class="modal-header">
+                <i class="fas fa-terminal"></i> Job Logs - <span id="logsJobId"></span>
+            </div>
+            
+            <div class="log-controls" style="display: flex; gap: 12px; margin-bottom: 16px;">
+                <button class="btn btn-sm" id="pauseLogsBtn">
+                    <i class="fas fa-pause"></i> Pause
+                </button>
+                <button class="btn btn-sm" id="clearLogsBtn">
+                    <i class="fas fa-trash"></i> Clear
+                </button>
+                <button class="btn btn-sm" id="downloadLogsBtn">
+                    <i class="fas fa-download"></i> Download
+                </button>
+                <div style="flex: 1;"></div>
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                    <input type="checkbox" id="autoScrollLogs" checked> Auto-scroll
+                </label>
+            </div>
+            
+            <div class="log-viewer" id="jobLogsViewer">
+                <div class="log-line">[2025-01-15 10:32:15] Job started on GPU cluster...</div>
+            </div>
+            
+            <div class="btn-group" style="margin-top: 20px;">
+                <button class="btn btn-secondary" id="closeLogsModalBtn">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Toggle performance panel
+        function togglePerformancePanel() {
+            const panel = document.getElementById('performance-panel');
+            if (panel && panel.style.display === 'block') {
+                window.performanceMonitor?.hide();
+            } else {
+                window.performanceMonitor?.show();
+            }
+        }
+    </script>
+    <script src="renderer.js"></script>
+    <script src="components/job-queue-manager.js"></script>
+    <script src="components/rewards-display.js"></script>
+    <script src="components/performance-monitor.js"></script>
+    <script src="components/error-recovery.js"></script>
+    <script src="components/onboarding.js"></script>
+    <script>
+    // === INLINED TAB SWITCHING LOGIC (FINAL) ===
+    function attachTabListeners() {
+        // console.log('=== VFT DEBUG: Attaching tab listeners... ===');
+
+        const setupClick = (selector, panelSelector, activeClass) => {
+            const buttons = document.querySelectorAll(selector);
+            if (buttons.length === 0) {
+                // console.warn(`VFT DEBUG: No buttons found for selector: ${selector}`);
+                return;
+            }
+            // console.log(`VFT DEBUG: Found ${buttons.length} buttons for ${selector}`);
+
+            buttons.forEach(btn => {
+                // Remove all existing listeners to prevent duplicates
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+
+                newBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // console.log(`VFT DEBUG: Click detected on ${selector}`);
+
+                    // Deactivate all buttons in the group
+                    document.querySelectorAll(selector).forEach(b => b.classList.remove(activeClass));
+                    // Deactivate all panels in the group
+                    document.querySelectorAll(panelSelector).forEach(p => p.classList.remove(activeClass));
+
+                    // Activate the clicked button
+                    newBtn.classList.add(activeClass);
+                    // console.log(`VFT DEBUG: Activated button:`, newBtn);
+
+                    // Activate the corresponding panel
+                    const panelId = newBtn.dataset.tabTarget;
+                    if (panelId) {
+                        const panel = document.getElementById(panelId);
+                        if (panel) {
+                            panel.classList.add(activeClass);
+                            // console.log(`VFT DEBUG: Activated panel:`, panel);
+                        } else {
+                            console.error(`VFT DEBUG: Panel with ID '${panelId}' not found.`);
+                        }
+                    } else {
+                        console.error(`VFT DEBUG: Button is missing 'data-tab-target' attribute.`, newBtn);
+                    }
+                });
+            });
+        };
+
+        setupClick('.content-tab-btn', '.content-panel', 'active');
+        setupClick('.tab-btn', '.tab-content', 'active');
+        
+        // console.log('=== VFT DEBUG: Tab listeners attached. ===');
+    }
+
+    // Expose closeModal globally for inline onclick
+    window.closeModal = function(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        // Re-attach listeners in case the DOM was altered
+        setTimeout(attachTabListeners, 50); 
+    };
+
+    // Initial attachment
+    window.addEventListener('DOMContentLoaded', () => {
+        // console.log("VFT DEBUG: DOMContentLoaded fired.");
+        attachTabListeners();
+    });
+
+    // Fallback attachment
+    setTimeout(() => {
+        // console.log("VFT DEBUG: Fallback attachment timer fired.");
+        attachTabListeners();
+    }, 500);
+
+    // Add Escape key support to close any open modal
+    window.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal').forEach(m => {
+                if (m.style.display === 'flex' || m.style.display === 'block') {
+                    m.style.display = 'none';
+                }
+            });
+        }
+    });
+    </script>
+    
+    <!-- Templates Modal -->
+    <div class="modal" id="templatesModal">
+        <div class="modal-content">
+            <div class="modal-header">Job Templates</div>
+            <button class="modal-close-btn" onclick="closeModal('templatesModal')" title="Close" style="float:right; background:none; border:none; font-size:22px; cursor:pointer; color:#fff; margin-left:12px;">&times;</button>
+            
+            <p style="color: var(--text-dim); margin-bottom: 20px;">
+                Pre-configured job templates for common AI/ML tasks
+            </p>
+            
+            <div class="templates-grid">
+                <div class="template-card">
+                    <h4>GPT Fine-tuning</h4>
+                    <p>Fine-tune language models on custom datasets</p>
+                    <button class="btn btn-primary btn-sm" onclick="loadTemplate('gpt-finetune')">Use Template</button>
+                </div>
+                <div class="template-card">
+                    <h4>Image Classification</h4>
+                    <p>Train CNN models for image classification tasks</p>
+                    <button class="btn btn-primary btn-sm" onclick="loadTemplate('image-classification')">Use Template</button>
+                </div>
+                <div class="template-card">
+                    <h4>Data Processing</h4>
+                    <p>Large-scale data preprocessing and ETL jobs</p>
+                    <button class="btn btn-primary btn-sm" onclick="loadTemplate('data-processing')">Use Template</button>
+                </div>
+                <div class="template-card">
+                    <h4>Model Inference</h4>
+                    <p>Batch inference on pre-trained models</p>
+                    <button class="btn btn-primary btn-sm" onclick="loadTemplate('inference')">Use Template</button>
+                </div>
+            </div>
+            
+            <div class="btn-group" style="margin-top: 24px;">
+                <button class="btn btn-secondary" onclick="closeModal('templatesModal')">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+    .templates-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 16px;
+        margin: 20px 0;
+    }
+    
+    .template-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 20px;
+    }
+    
+    .template-card h4 {
+        color: var(--primary);
+        margin-bottom: 8px;
+    }
+    
+    .template-card p {
+        color: var(--text-dim);
+        font-size: 13px;
+        margin-bottom: 16px;
+    }
+    
+    .btn-sm {
+        padding: 6px 16px;
+        font-size: 13px;
+    }
+    </style>
+    
+    <script>
+    function loadTemplate(templateName) {
+        closeModal('templatesModal');
+        showJobModal();
+        
+        // Pre-fill job form based on template
+        const templates = {
+            'gpt-finetune': {
+                name: 'GPT Fine-tuning Job',
+                script: '# GPT Fine-tuning Script\nimport torch\nfrom transformers import GPT2Model, GPT2Tokenizer\n\n# Load model and tokenizer\nmodel = GPT2Model.from_pretrained("gpt2")\ntokenizer = GPT2Tokenizer.from_pretrained("gpt2")\n\n# Your fine-tuning code here',
+                gpuType: 'a100',
+                gpuCount: 2,
+                estimatedHours: 4
+            },
+            'image-classification': {
+                name: 'Image Classification Training',
+                script: '# Image Classification with PyTorch\nimport torch\nimport torchvision\nfrom torchvision import datasets, transforms\n\n# Data transformations\ntransform = transforms.Compose([\n    transforms.Resize(256),\n    transforms.CenterCrop(224),\n    transforms.ToTensor()\n])\n\n# Your training code here',
+                gpuType: '4090',
+                gpuCount: 1,
+                estimatedHours: 2
+            },
+            'data-processing': {
+                name: 'Large-scale Data Processing',
+                script: '# Data Processing with RAPIDS\nimport cudf\nimport cupy as cp\nimport dask_cudf\n\n# Load and process data using GPU acceleration\ndf = cudf.read_csv("data.csv")\n\n# Your processing code here',
+                gpuType: 'a6000',
+                gpuCount: 4,
+                estimatedHours: 1
+            },
+            'inference': {
+                name: 'Batch Model Inference',
+                script: '# Batch Inference Script\nimport torch\nfrom transformers import pipeline\n\n# Load pre-trained model\nclassifier = pipeline("sentiment-analysis")\n\n# Your inference code here',
+                gpuType: 'any',
+                gpuCount: 1,
+                estimatedHours: 0,
+                estimatedMinutes: 30
+            }
+        };
+        
+        const template = templates[templateName];
+        if (template) {
+            document.getElementById('jobName').value = template.name;
+            document.getElementById('jobScript').value = template.script;
+            document.getElementById('gpuType').value = template.gpuType;
+            document.getElementById('gpuCount').value = template.gpuCount;
+            document.getElementById('estimatedHours').value = template.estimatedHours || 0;
+            document.getElementById('estimatedMinutes').value = template.estimatedMinutes || 0;
+            updateCostPreview();
+        }
+    }
+    </script>
+</body>
+</html>
